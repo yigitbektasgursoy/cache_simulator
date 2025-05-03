@@ -35,6 +35,8 @@ add_executable(cache_simulator src/main.cpp ${SOURCE_FILES})
 
 # Test executable
 add_executable(cache_test tests/cache_test.cpp ${SOURCE_FILES})
+add_executable(adress_test tests/address_test.cpp src/address.cpp)
+
 
 # Enable testing
 enable_testing()

@@ -1,0 +1,1 @@
+/usr/bin/g++ -DQT_QML_DEBUG -O2 -g -DNDEBUG CMakeFiles/adress_test.dir/tests/address_test.cpp.o CMakeFiles/adress_test.dir/src/address.cpp.o CMakeFiles/adress_test.dir/src/cache.cpp.o CMakeFiles/adress_test.dir/src/cache_policy.cpp.o CMakeFiles/adress_test.dir/src/memory.cpp.o CMakeFiles/adress_test.dir/src/metrics.cpp.o -o bin/adress_test
