@@ -44,4 +44,5 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/cache_simulator.dir/DependInfo.cmake"
   "CMakeFiles/cache_test.dir/DependInfo.cmake"
   "CMakeFiles/adress_test.dir/DependInfo.cmake"
+  "CMakeFiles/cache_policy_test.dir/DependInfo.cmake"
   )

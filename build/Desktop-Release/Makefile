@@ -210,6 +210,19 @@ adress_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/adress_test.dir/build.make CMakeFiles/adress_test.dir/build
 .PHONY : adress_test/fast
 
+#=============================================================================
+# Target rules for targets named cache_policy_test
+
+# Build rule for target.
+cache_policy_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cache_policy_test
+.PHONY : cache_policy_test
+
+# fast build rule for target.
+cache_policy_test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/build
+.PHONY : cache_policy_test/fast
+
 src/address.o: src/address.cpp.o
 .PHONY : src/address.o
 
@@ -274,6 +287,7 @@ src/cache_policy.o: src/cache_policy.cpp.o
 src/cache_policy.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_simulator.dir/build.make CMakeFiles/cache_simulator.dir/src/cache_policy.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_test.dir/build.make CMakeFiles/cache_test.dir/src/cache_policy.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/src/cache_policy.cpp.o
 .PHONY : src/cache_policy.cpp.o
 
 src/cache_policy.i: src/cache_policy.cpp.i
@@ -283,6 +297,7 @@ src/cache_policy.i: src/cache_policy.cpp.i
 src/cache_policy.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_simulator.dir/build.make CMakeFiles/cache_simulator.dir/src/cache_policy.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_test.dir/build.make CMakeFiles/cache_test.dir/src/cache_policy.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/src/cache_policy.cpp.i
 .PHONY : src/cache_policy.cpp.i
 
 src/cache_policy.s: src/cache_policy.cpp.s
@@ -292,6 +307,7 @@ src/cache_policy.s: src/cache_policy.cpp.s
 src/cache_policy.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_simulator.dir/build.make CMakeFiles/cache_simulator.dir/src/cache_policy.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_test.dir/build.make CMakeFiles/cache_test.dir/src/cache_policy.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/src/cache_policy.cpp.s
 .PHONY : src/cache_policy.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -396,6 +412,30 @@ tests/address_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/adress_test.dir/build.make CMakeFiles/adress_test.dir/tests/address_test.cpp.s
 .PHONY : tests/address_test.cpp.s
 
+tests/cache_policy_test.o: tests/cache_policy_test.cpp.o
+.PHONY : tests/cache_policy_test.o
+
+# target to build an object file
+tests/cache_policy_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/tests/cache_policy_test.cpp.o
+.PHONY : tests/cache_policy_test.cpp.o
+
+tests/cache_policy_test.i: tests/cache_policy_test.cpp.i
+.PHONY : tests/cache_policy_test.i
+
+# target to preprocess a source file
+tests/cache_policy_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/tests/cache_policy_test.cpp.i
+.PHONY : tests/cache_policy_test.cpp.i
+
+tests/cache_policy_test.s: tests/cache_policy_test.cpp.s
+.PHONY : tests/cache_policy_test.s
+
+# target to generate assembly for a file
+tests/cache_policy_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cache_policy_test.dir/build.make CMakeFiles/cache_policy_test.dir/tests/cache_policy_test.cpp.s
+.PHONY : tests/cache_policy_test.cpp.s
+
 tests/cache_test.o: tests/cache_test.cpp.o
 .PHONY : tests/cache_test.o
 
@@ -434,6 +474,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... adress_test"
+	@echo "... cache_policy_test"
 	@echo "... cache_simulator"
 	@echo "... cache_test"
 	@echo "... src/address.o"
@@ -457,6 +498,9 @@ help:
 	@echo "... tests/address_test.o"
 	@echo "... tests/address_test.i"
 	@echo "... tests/address_test.s"
+	@echo "... tests/cache_policy_test.o"
+	@echo "... tests/cache_policy_test.i"
+	@echo "... tests/cache_policy_test.s"
 	@echo "... tests/cache_test.o"
 	@echo "... tests/cache_test.i"
 	@echo "... tests/cache_test.s"

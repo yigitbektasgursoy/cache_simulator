@@ -1,0 +1,1 @@
+/usr/bin/g++ -O3 -DNDEBUG CMakeFiles/cache_policy_test.dir/tests/cache_policy_test.cpp.o CMakeFiles/cache_policy_test.dir/src/cache_policy.cpp.o -o bin/cache_policy_test
