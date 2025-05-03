@@ -1,9 +1,0 @@
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/cache_simulator.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/cache_test.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/test.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/edit_cache.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/rebuild_cache.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/list_install_components.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/install.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/install/local.dir
-/home/yigit/Desktop/cache-simulator/build/Desktop-Debug/CMakeFiles/install/strip.dir
