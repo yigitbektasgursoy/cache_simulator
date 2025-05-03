@@ -1,0 +1,1 @@
+/usr/bin/g++ -DQT_QML_DEBUG -g CMakeFiles/cache_simulator.dir/src/main.cpp.o CMakeFiles/cache_simulator.dir/src/address.cpp.o CMakeFiles/cache_simulator.dir/src/cache.cpp.o CMakeFiles/cache_simulator.dir/src/cache_policy.cpp.o CMakeFiles/cache_simulator.dir/src/memory.cpp.o CMakeFiles/cache_simulator.dir/src/metrics.cpp.o -o bin/cache_simulator
