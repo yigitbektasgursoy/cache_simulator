@@ -1734,10 +1734,13 @@ CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: /home/yigit/Desktop/cache-simu
   /usr/include/c++/14/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/14/bits/stl_iterator_base_types.h \
   /usr/include/c++/14/bits/stl_list.h \
+  /usr/include/c++/14/bits/stl_map.h \
+  /usr/include/c++/14/bits/stl_multimap.h \
   /usr/include/c++/14/bits/stl_numeric.h \
   /usr/include/c++/14/bits/stl_pair.h \
   /usr/include/c++/14/bits/stl_raw_storage_iter.h \
   /usr/include/c++/14/bits/stl_tempbuf.h \
+  /usr/include/c++/14/bits/stl_tree.h \
   /usr/include/c++/14/bits/stl_uninitialized.h \
   /usr/include/c++/14/bits/stl_vector.h \
   /usr/include/c++/14/bits/stream_iterator.h \
@@ -1793,6 +1796,7 @@ CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: /home/yigit/Desktop/cache-simu
   /usr/include/c++/14/limits \
   /usr/include/c++/14/list \
   /usr/include/c++/14/locale \
+  /usr/include/c++/14/map \
   /usr/include/c++/14/memory \
   /usr/include/c++/14/new \
   /usr/include/c++/14/numbers \
@@ -1880,6 +1884,12 @@ CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: /home/yigit/Desktop/cache-simu
   /usr/lib/gcc/x86_64-redhat-linux/14/include/stdint.h \
   /usr/lib/gcc/x86_64-redhat-linux/14/include/syslimits.h
 
+
+/usr/include/c++/14/map:
+
+/usr/include/c++/14/bits/stl_tree.h:
+
+/usr/include/c++/14/bits/stl_map.h:
 
 /home/yigit/Desktop/cache-simulator/tests/cache_test.cpp:
 
@@ -2204,6 +2214,8 @@ CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: /home/yigit/Desktop/cache-simu
 /usr/include/c++/14/bits/enable_special_members.h:
 
 /usr/include/bits/types/__sigset_t.h:
+
+/usr/include/c++/14/bits/stl_multimap.h:
 
 /usr/include/bits/types/struct_itimerspec.h:
 

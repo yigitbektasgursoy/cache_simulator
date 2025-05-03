@@ -1,6 +1,7 @@
 CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: \
  /home/yigit/Desktop/cache-simulator/tests/cache_test.cpp \
  /usr/include/stdc-predef.h \
+ /home/yigit/Desktop/cache-simulator/include/cache.hpp \
  /home/yigit/Desktop/cache-simulator/include/address.hpp \
  /usr/include/c++/14/cstdint \
  /usr/include/c++/14/x86_64-redhat-linux/bits/c++config.h \
@@ -154,7 +155,6 @@ CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: \
  /usr/include/c++/14/bits/uniform_int_dist.h \
  /usr/include/c++/14/bits/stl_tempbuf.h \
  /usr/include/c++/14/bits/unicode-data.h \
- /home/yigit/Desktop/cache-simulator/include/cache.hpp \
  /home/yigit/Desktop/cache-simulator/include/cache_policy.hpp \
  /usr/include/c++/14/memory /usr/include/c++/14/bits/stl_uninitialized.h \
  /usr/include/c++/14/bits/stl_raw_storage_iter.h \
@@ -230,4 +230,6 @@ CMakeFiles/cache_test.dir/tests/cache_test.cpp.o: \
  /usr/include/c++/14/pstl/glue_algorithm_defs.h \
  /usr/include/c++/14/iostream /usr/include/c++/14/istream \
  /usr/include/c++/14/bits/istream.tcc /usr/include/c++/14/cassert \
- /usr/include/assert.h
+ /usr/include/assert.h /usr/include/c++/14/map \
+ /usr/include/c++/14/bits/stl_tree.h /usr/include/c++/14/bits/stl_map.h \
+ /usr/include/c++/14/bits/stl_multimap.h
