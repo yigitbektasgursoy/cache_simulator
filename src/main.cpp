@@ -1,323 +1,278 @@
-// main.cpp
-#include "address.hpp"
+// main.cpp - Cache Simulator Entry Point
+#include "json_config.hpp"
 #include "cache.hpp"
 #include "memory.hpp"
 #include "metrics.hpp"
 #include <iostream>
-#include <memory>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <algorithm>
 #include <iomanip>
 #include <chrono>
-#include <thread>
-#include <functional>
+#include <string>
+#include <vector>
+#include <filesystem>
+#include <cstring>
 
-// Helper function to create a cache configuration
-CacheConfig createCacheConfig(
-    CacheConfig::Organization org,
-    uint64_t size,
-    uint64_t blockSize,
-    uint64_t associativity,
-    const std::string& policy,
-    uint64_t latency,
-    bool writeBack,
-    bool writeAllocate) {
-    
-    CacheConfig config;
-    config.organization = org;
-    config.size = size;
-    config.blockSize = blockSize;
-    config.associativity = associativity;
-    config.policy = policy;
-    config.accessLatency = latency;
-    config.writeBack = writeBack;
-    config.writeAllocate = writeAllocate;
-    
-    return config;
-}
+// Function to print cache statistics
+void printCacheStats(const CacheHierarchy& hierarchy) {
+    auto stats = hierarchy.getStats();
 
-// Helper function to create a trace file for testing
-void createTestTraceFile(const std::string& filename) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Could not create trace file: " << filename << std::endl;
-        return;
-    }
-    
-    // Generate a memory access pattern
-    // Format: <address> <R/W>
-    
-    // Sequential reads
-    for (uint64_t i = 0; i < 1000; i += 64) {
-        file << std::hex << i << " R" << std::endl;
-    }
-    
-    // Random reads and writes
-    std::srand(42); // Fixed seed for reproducibility
-    for (int i = 0; i < 1000; ++i) {
-        uint64_t addr = std::rand() % 0x100000; // 1MB address space
-        char type = (std::rand() % 100 < 70) ? 'R' : 'W'; // 70% reads, 30% writes
-        file << std::hex << addr << " " << type << std::endl;
-    }
-    
-    // Looping pattern
-    for (int j = 0; j < 10; ++j) {
-        for (uint64_t i = 0x200000; i < 0x201000; i += 64) {
-            file << std::hex << i << " R" << std::endl;
-        }
-    }
-    
-    file.close();
-    std::cout << "Created test trace file: " << filename << std::endl;
-}
+    std::cout << "\nCache Statistics:" << std::endl;
+    std::cout << std::string(50, '-') << std::endl;
 
-// Helper function to run a simple test to verify cache functionality
-void runSingleTest() {
-    // Create L1 cache (direct-mapped, 32KB, 64B blocks)
-    auto l1Config = createCacheConfig(
-        CacheConfig::Organization::DirectMapped,
-        32 * 1024,      // 32KB
-        64,             // 64B blocks
-        1,              // Direct-mapped
-        "LRU",          // Policy (not used for direct-mapped)
-        1,              // 1 cycle latency
-        true,           // Write-back
-        true            // Write-allocate
-    );
-    
-    // Create cache
-    Cache l1Cache(l1Config);
-    
-    // Create a simple access pattern
-    std::vector<MemoryAccess> accesses = {
-        // Sequential reads
-        MemoryAccess(MemoryAddress(0x1000), AccessType::Read),
-        MemoryAccess(MemoryAddress(0x1040), AccessType::Read),
-        MemoryAccess(MemoryAddress(0x1080), AccessType::Read),
-        MemoryAccess(MemoryAddress(0x10C0), AccessType::Read),
-        
-        // Repeated access (should hit)
-        MemoryAccess(MemoryAddress(0x1000), AccessType::Read),
-        
-        // Write to existing block (should hit)
-        MemoryAccess(MemoryAddress(0x1040), AccessType::Write),
-        
-        // Access to new location (should miss)
-        MemoryAccess(MemoryAddress(0x2000), AccessType::Read),
-        
-        // Access that will cause conflict (should evict 0x1000 and miss)
-        // For a 32KB direct-mapped cache with 64B blocks, index bits are 9 (512 sets),
-        // meaning addresses with the same bits 6-14 will map to the same set
-        // 0x21000 = 0b10_0001_0000_0000_0000 and 0x1000 = 0b1_0000_0000_0000
-        // They have the same index bits (6-14) so they map to the same set
-        MemoryAccess(MemoryAddress(0x21000), AccessType::Read)
-    };
-    
-    // Process accesses
-    std::cout << "Running basic cache test..." << std::endl;
-    for (const auto& access : accesses) {
-        auto result = l1Cache.access(access.address, access.type);
-        std::cout << "Access to " << access.address.toString() 
-                 << " (" << (access.type == AccessType::Read ? "Read" : "Write") << "): "
-                 << (result.hit ? "HIT" : "MISS");
-        
-        if (result.writeBack) {
-            std::cout << " (Write-back";
-            if (result.evictedAddress) {
-                std::cout << " from " << result.evictedAddress->toString();
+    for (size_t i = 0; i < stats.size(); ++i) {
+        auto [hitRate, hits, misses] = stats[i];
+        std::cout << "L" << (i + 1) << " Cache:" << std::endl;
+        std::cout << "  Hits:   " << hits << std::endl;
+        std::cout << "  Misses: " << misses << std::endl;
+        std::cout << "  Total:  " << (hits + misses) << std::endl;
+        std::cout << "  Hit Rate: " << std::fixed << std::setprecision(2)
+                  << (hitRate * 100) << "%" << std::endl;
+
+        // Get more details about the cache level
+        const auto& cache = hierarchy.getCacheLevel(i);
+        const auto& config = cache.getConfig();
+
+        std::cout << "  Configuration:" << std::endl;
+        std::cout << "    Size: " << config.size << " bytes" << std::endl;
+        std::cout << "    Block Size: " << config.blockSize << " bytes" << std::endl;
+        std::cout << "    Associativity: " << config.getNumWays() << " ways" << std::endl;
+        std::cout << "    Sets: " << config.getNumSets() << std::endl;
+        std::cout << "    Replacement Policy: " << config.policy << std::endl;
+
+        if (i > 0) {
+            std::string inclusionPolicy;
+            switch (config.inclusionPolicy) {
+                case InclusionPolicy::Inclusive:
+                    inclusionPolicy = "Inclusive";
+                    break;
+                case InclusionPolicy::Exclusive:
+                    inclusionPolicy = "Exclusive";
+                    break;
+                case InclusionPolicy::NINE:
+                    inclusionPolicy = "Non-Inclusive Non-Exclusive";
+                    break;
             }
-            std::cout << ")";
+            std::cout << "    Inclusion Policy: " << inclusionPolicy << std::endl;
         }
-        
+
         std::cout << std::endl;
     }
-    
-    // Print statistics
-    std::cout << "\nCache Statistics:" << std::endl;
-    std::cout << "Hits: " << l1Cache.getHits() << std::endl;
-    std::cout << "Misses: " << l1Cache.getMisses() << std::endl;
-    std::cout << "Hit Rate: " << (l1Cache.getHitRate() * 100.0) << "%" << std::endl;
 }
 
-// Helper function to run a comparative analysis of different cache configurations
-void runComparativeAnalysis() {
-    // Create the performance analyzer
-    PerformanceAnalyzer analyzer;
-    
-    // Create test trace file
-    const std::string traceFile = "test_trace.txt";
-    createTestTraceFile(traceFile);
-    
-    // Test 1: Direct-mapped L1 cache
-    {
-        auto l1Config = createCacheConfig(
-            CacheConfig::Organization::DirectMapped,
-            32 * 1024,      // 32KB
-            64,             // 64B blocks
-            1,              // Direct-mapped
-            "LRU",          // Policy (not used for direct-mapped)
-            1,              // 1 cycle latency
-            true,           // Write-back
-            true            // Write-allocate
-        );
-        
-        std::vector<std::unique_ptr<Cache>> caches;
-        caches.push_back(std::make_unique<Cache>(l1Config));
-        
-        auto memory = std::make_unique<MainMemory>(100);
-        auto trace = std::make_unique<FileTraceSource>(traceFile);
-        
-        analyzer.addTest(std::make_unique<TestConfig>(
-            "Direct-Mapped L1",
-            std::move(caches),
-            std::move(memory),
-            std::move(trace)
-        ));
-    }
-    
-    // Test 2: 4-way set-associative L1 cache with LRU
-    {
-        auto l1Config = createCacheConfig(
-            CacheConfig::Organization::SetAssociative,
-            32 * 1024,      // 32KB
-            64,             // 64B blocks
-            4,              // 4-way set-associative
-            "LRU",          // LRU policy
-            1,              // 1 cycle latency
-            true,           // Write-back
-            true            // Write-allocate
-        );
-        
-        std::vector<std::unique_ptr<Cache>> caches;
-        caches.push_back(std::make_unique<Cache>(l1Config));
-        
-        auto memory = std::make_unique<MainMemory>(100);
-        auto trace = std::make_unique<FileTraceSource>(traceFile);
-        
-        analyzer.addTest(std::make_unique<TestConfig>(
-            "4-Way SA L1 (LRU)",
-            std::move(caches),
-            std::move(memory),
-            std::move(trace)
-        ));
-    }
-    
-    // Test 3: 4-way set-associative L1 cache with FIFO
-    {
-        auto l1Config = createCacheConfig(
-            CacheConfig::Organization::SetAssociative,
-            32 * 1024,      // 32KB
-            64,             // 64B blocks
-            4,              // 4-way set-associative
-            "FIFO",         // FIFO policy
-            1,              // 1 cycle latency
-            true,           // Write-back
-            true            // Write-allocate
-        );
-        
-        std::vector<std::unique_ptr<Cache>> caches;
-        caches.push_back(std::make_unique<Cache>(l1Config));
-        
-        auto memory = std::make_unique<MainMemory>(100);
-        auto trace = std::make_unique<FileTraceSource>(traceFile);
-        
-        analyzer.addTest(std::make_unique<TestConfig>(
-            "4-Way SA L1 (FIFO)",
-            std::move(caches),
-            std::move(memory),
-            std::move(trace)
-        ));
-    }
-    
-    // Test 4: 4-way set-associative L1 cache with Random
-    {
-        auto l1Config = createCacheConfig(
-            CacheConfig::Organization::SetAssociative,
-            32 * 1024,      // 32KB
-            64,             // 64B blocks
-            4,              // 4-way set-associative
-            "RANDOM",       // Random policy
-            1,              // 1 cycle latency
-            true,           // Write-back
-            true            // Write-allocate
-        );
-        
-        std::vector<std::unique_ptr<Cache>> caches;
-        caches.push_back(std::make_unique<Cache>(l1Config));
-        
-        auto memory = std::make_unique<MainMemory>(100);
-        auto trace = std::make_unique<FileTraceSource>(traceFile);
-        
-        analyzer.addTest(std::make_unique<TestConfig>(
-            "4-Way SA L1 (Random)",
-            std::move(caches),
-            std::move(memory),
-            std::move(trace)
-        ));
-    }
-    
-    // Test 5: L1 + L2 hierarchy
-    {
-        auto l1Config = createCacheConfig(
-            CacheConfig::Organization::SetAssociative,
-            32 * 1024,      // 32KB
-            64,             // 64B blocks
-            4,              // 4-way set-associative
-            "LRU",          // LRU policy
-            1,              // 1 cycle latency
-            true,           // Write-back
-            true            // Write-allocate
-        );
-        
-        auto l2Config = createCacheConfig(
-            CacheConfig::Organization::SetAssociative,
-            256 * 1024,     // 256KB
-            64,             // 64B blocks
-            8,              // 8-way set-associative
-            "LRU",          // LRU policy
-            10,             // 10 cycle latency
-            true,           // Write-back
-            true            // Write-allocate
-        );
-        
-        std::vector<std::unique_ptr<Cache>> caches;
-        caches.push_back(std::make_unique<Cache>(l1Config));
-        caches.push_back(std::make_unique<Cache>(l2Config));
-        
-        auto memory = std::make_unique<MainMemory>(100);
-        auto trace = std::make_unique<FileTraceSource>(traceFile);
-        
-        analyzer.addTest(std::make_unique<TestConfig>(
-            "L1+L2 Hierarchy",
-            std::move(caches),
-            std::move(memory),
-            std::move(trace)
-        ));
-    }
-    
-    // Run the tests
-    auto results = analyzer.runTests();
-    
-    // Compare the results
-    std::cout << "\nResults Comparison:" << std::endl;
-    analyzer.compareResults(results);
-    
-    // Save results for analysis
-    analyzer.saveResultsToCSV(results, "cache_results.csv");
-    analyzer.exportForPlotting(results, "plots");
+// Function to print memory statistics
+void printMemoryStats(const MainMemory& memory) {
+    std::cout << "Memory Statistics:" << std::endl;
+    std::cout << std::string(50, '-') << std::endl;
+    std::cout << "  Reads:  " << memory.getReads() << std::endl;
+    std::cout << "  Writes: " << memory.getWrites() << std::endl;
+    std::cout << "  Total:  " << memory.getAccesses() << std::endl;
+    std::cout << "  Latency: " << memory.getAccessLatency() << " cycles" << std::endl;
+    std::cout << std::endl;
 }
 
-int main() {
-    std::cout << "Cache Simulator - Processor Architecture Project" << std::endl;
-    std::cout << "=================================================" << std::endl;
-    
-    // Run a simple test to verify basic cache functionality
-    runSingleTest();
-    
-    std::cout << "\nRunning comparative analysis of different cache configurations..." << std::endl;
-    runComparativeAnalysis();
-    
+void printUsage(const char* programName) {
+    std::cout << "Usage: " << programName << " <config1.json> [config2.json ...] [options]" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  --visualize    Generate visualization scripts for results" << std::endl;
+    std::cout << "  --compare      Compare results across multiple configurations" << std::endl;
+    std::cout << "  --verbose      Display detailed output" << std::endl;
+    std::cout << "  --help         Display this help message" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+    // Parse command line arguments
+    if (argc < 2) {
+        printUsage(argv[0]);
+        return 1;
+    }
+
+    std::vector<std::string> configFiles;
+    bool generateVisualizations = true;
+    bool compareConfigs = false;
+    bool verbose = false;
+
+    // Parse arguments
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg[0] == '-') {
+            // This is an option
+            if (arg == "--visualize") {
+                generateVisualizations = true;
+            } else if (arg == "--compare") {
+                compareConfigs = true;
+            } else if (arg == "--verbose") {
+                verbose = true;
+            } else if (arg == "--help") {
+                printUsage(argv[0]);
+                return 0;
+            } else {
+                std::cerr << "Unknown option: " << arg << std::endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+        } else {
+            // This is a configuration file
+            configFiles.push_back(arg);
+        }
+    }
+
+    if (configFiles.empty()) {
+        std::cerr << "Error: No configuration files specified" << std::endl;
+        printUsage(argv[0]);
+        return 1;
+    }
+
+    // Check if all config files exist
+    for (const auto& file : configFiles) {
+        if (!std::filesystem::exists(file)) {
+            std::cerr << "Error: Configuration file not found: " << file << std::endl;
+            return 1;
+        }
+    }
+
+    std::cout << "Cache Simulator" << std::endl;
+    std::cout << "==============" << std::endl;
+
+    // Handle comparison mode
+    if (compareConfigs || configFiles.size() > 1) {
+        PerformanceAnalyzer analyzer;
+
+        // Load all test configurations
+        for (const auto& file : configFiles) {
+            std::cout << "Loading configuration: " << file << std::endl;
+            auto config = JsonConfigLoader::loadTestConfig(file);
+            analyzer.addTest(std::move(config));
+        }
+
+        // Run all tests
+        std::cout << "Running simulations..." << std::endl;
+        auto results = analyzer.runTests();
+
+        // Compare results
+        std::cout << "\nResults Comparison:" << std::endl;
+        analyzer.compareResults(results);
+
+        // Save results to CSV and generate visualization if requested
+        if (generateVisualizations) {
+            std::string csvFile = "cache_comparison_results.csv";
+            analyzer.saveResultsToCSV(results, csvFile);
+
+            std::cout << "\nGenerated visualization files:" << std::endl;
+            std::cout << "  " << csvFile << std::endl;
+        }
+
+        return 0;
+    }
+
+    // Handle single configuration mode
+    // Run the simulation with the first config file only
+    try {
+        const std::string& configFile = configFiles[0];
+        std::cout << "Running simulation with: " << configFile << std::endl;
+
+        // Load the configuration
+        auto testConfig = JsonConfigLoader::loadTestConfig(configFile);
+        std::cout << "Test name: " << testConfig->name << std::endl;
+
+        // Setup cache hierarchy
+        CacheHierarchy hierarchy;
+        for (const auto& cache : testConfig->caches) {
+            hierarchy.addCacheLevel(std::make_unique<Cache>(*cache));
+        }
+
+        std::cout << "Cache hierarchy created with " << testConfig->caches.size() << " levels" << std::endl;
+
+        // Get a reference to the memory
+        auto& memory = *(testConfig->memory);
+
+        // Start timing
+        auto startTime = std::chrono::high_resolution_clock::now();
+
+        // Process the trace
+        auto& traceSource = testConfig->traceSource;
+        uint64_t totalLatency = 0;
+        uint64_t accessCount = 0;
+        uint64_t hitCount = 0;
+
+        std::cout << "Processing memory trace..." << std::endl;
+
+        // Process all memory accesses
+        while (auto access = traceSource->getNextAccess()) {
+            if (verbose && accessCount % 100000 == 0) {
+                std::cout << "Processed " << accessCount << " accesses..." << std::endl;
+            }
+
+            // Access the cache hierarchy
+            auto [latency, hitInCache] = hierarchy.access(access->address, access->type);
+
+            // If cache miss at all levels, access main memory
+            if (!hitInCache) {
+                latency += memory.access(access->address, access->type);
+            } else {
+                hitCount++;
+            }
+
+            totalLatency += latency;
+            accessCount++;
+        }
+
+        // Stop timing
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+
+        // Print results
+        std::cout << "\nSimulation completed in " << duration.count() << " ms" << std::endl;
+        std::cout << "Processed " << accessCount << " memory accesses" << std::endl;
+
+        if (accessCount > 0) {
+            double overallHitRate = static_cast<double>(hitCount) / accessCount * 100;
+            double avgLatency = static_cast<double>(totalLatency) / accessCount;
+
+            std::cout << "Overall hit rate: " << std::fixed << std::setprecision(2)
+                      << overallHitRate << "%" << std::endl;
+            std::cout << "Average memory access time: " << std::fixed << std::setprecision(2)
+                      << avgLatency << " cycles" << std::endl;
+        }
+
+        // Print detailed statistics
+        printCacheStats(hierarchy);
+        printMemoryStats(memory);
+
+        // Generate visualizations if requested
+        if (generateVisualizations) {
+            // Create a performance analyzer
+            PerformanceAnalyzer analyzer;
+
+            // Add the current test configuration
+            std::vector<std::unique_ptr<Cache>> cachesCopy;
+            for (const auto& cache : testConfig->caches) {
+                cachesCopy.push_back(std::make_unique<Cache>(*cache));
+            }
+
+            // Reset the trace source
+            testConfig->traceSource->reset();
+
+            analyzer.addTest(std::make_unique<TestConfig>(
+                testConfig->name,
+                std::move(cachesCopy),
+                std::make_unique<MainMemory>(memory.getAccessLatency()),
+                testConfig->traceSource->clone()
+            ));
+
+            // Run the test
+            auto results = analyzer.runTests();
+
+            // Save results to CSV
+            std::string csvFile = testConfig->name + "_results.csv";
+            analyzer.saveResultsToCSV(results, csvFile);
+
+            std::cout << "\nGenerated visualization files:" << std::endl;
+            std::cout << "  " << csvFile << std::endl;
+
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+
     return 0;
 }

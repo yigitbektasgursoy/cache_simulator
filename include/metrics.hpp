@@ -6,12 +6,10 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
-#include <functional>
 #include <chrono>
 #include <numeric>
 #include <algorithm>
 #include <fstream>
-#include <sstream>
 #include <format>
 #include <filesystem>
 
@@ -79,6 +77,9 @@ public:
     
     // Export results to a format suitable for plotting (e.g., with Python)
     void exportForPlotting(const std::vector<TestResult>& results, const std::string& directory) const;
+
+    // Add to the public section of the PerformanceAnalyzer class
+    void generateVisualizationScript(const std::string& dataFile, const std::string& outputScript) const;
 
 private:
     std::vector<std::unique_ptr<TestConfig>> testConfigs_;

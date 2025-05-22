@@ -1,1 +1,0 @@
-/usr/bin/g++ -O3 -DNDEBUG CMakeFiles/adress_test.dir/tests/address_test.cpp.o CMakeFiles/adress_test.dir/src/address.cpp.o -o bin/adress_test

@@ -1,15 +1,13 @@
 // cache_policy.hpp
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <vector>
 #include <list>
 #include <unordered_map>
 #include <random>
 #include <functional>
-#include <ranges>
-#include <algorithm>
+#include <set>
 
 // Forward declaration
 class CacheEntry;
@@ -27,6 +25,9 @@ public:
     
     // Clone the policy (for copying cache configurations)
     [[nodiscard]] virtual std::unique_ptr<ReplacementPolicy> clone() const = 0;
+    
+    // Reset the policy's internal state
+    virtual void reset() = 0;
 };
 
 // LRU (Least Recently Used) policy
@@ -37,6 +38,7 @@ public:
     void onAccess(uint64_t set, uint64_t way) override;
     [[nodiscard]] uint64_t getVictim(uint64_t set, uint64_t numWays) override;
     [[nodiscard]] std::unique_ptr<ReplacementPolicy> clone() const override;
+    void reset() override; // Add this line
 
 private:
     // Map from set index to list of ways ordered by recency of use
@@ -54,23 +56,29 @@ public:
     void onAccess(uint64_t set, uint64_t way) override;
     [[nodiscard]] uint64_t getVictim(uint64_t set, uint64_t numWays) override;
     [[nodiscard]] std::unique_ptr<ReplacementPolicy> clone() const override;
+    void reset() override;
 
 private:
-    // Map from set index to queue of ways ordered by insertion time
-    std::unordered_map<uint64_t, std::list<uint64_t>> fifoQueue_;
+    // Simple counter for each set - points to next way to evict
+    std::unordered_map<uint64_t, uint64_t> circularCounters_;
+    
+    // Track which ways have been seen for each set
+    std::unordered_map<uint64_t, std::set<uint64_t>> usedWays_;
 };
 
 // Random replacement policy
 class RandomPolicy : public ReplacementPolicy {
 public:
-    RandomPolicy() : rng_(std::random_device{}()) {}
+    RandomPolicy() = default;
     
     void onAccess(uint64_t set, uint64_t way) override;
     [[nodiscard]] uint64_t getVictim(uint64_t set, uint64_t numWays) override;
     [[nodiscard]] std::unique_ptr<ReplacementPolicy> clone() const override;
+    void reset() override; // Add this line
 
 private:
-    std::mt19937 rng_;
+    // Track which ways have been used for each set
+    std::unordered_map<uint64_t, std::vector<bool>> usedWays_;
 };
 
 // Factory function to create policy by name - demonstrates modern C++ function objects

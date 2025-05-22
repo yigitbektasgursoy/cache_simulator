@@ -1,0 +1,35 @@
+{
+  "test_name": "Multilevel_Inclusive_Cache",
+  "cache_hierarchy": [
+    {
+      "level": 1,
+      "organization": "SetAssociative",
+      "size": 32768,
+      "block_size": 64,
+      "associativity": 8,
+      "policy": "LRU",
+      "access_latency": 1,
+      "write_back": true,
+      "write_allocate": true
+    },
+    {
+      "level": 2,
+      "organization": "SetAssociative",
+      "size": 262144,
+      "block_size": 64,
+      "associativity": 16,
+      "policy": "LRU",
+      "access_latency": 10,
+      "write_back": true,
+      "write_allocate": true,
+      "inclusion_policy": "Exclusive"
+    }
+  ],
+  "memory": {
+    "access_latency": 100
+  },
+  "trace": {
+    "type": "File",
+    "filename": "traces/blocked_access.out"
+  }
+}

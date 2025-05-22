@@ -1,0 +1,36 @@
+{
+  "cache_hierarchy": [
+    {
+      "level": 1,
+      "organization": "SetAssociative",
+      "size": 512,
+      "block_size": 32,
+      "associativity": 2,
+      "policy": "LRU",
+      "access_latency": 1,
+      "write_back": true,
+      "write_allocate": true
+    },
+    {
+      "level": 2,
+      "organization": "SetAssociative",
+      "size": 8192,
+      "block_size": 32,
+      "associativity": 4,
+      "policy": "LRU",
+      "access_latency": 10,
+      "write_back": true,
+      "write_allocate": true,
+      "inclusion_policy": "Inclusive"
+    }
+  ],
+  "memory": {
+    "access_latency": 100
+  },
+  "trace": {
+    "type": "File",
+    "filename": "/home/yigit/Desktop/cache_sim_debug/traces/conflict_heavy.out"
+  },
+  "description": "Benchmark: Conflict-heavy access pattern (ConflictHeavy) | Variation: L1Size_512B | L1: Size=512B, Block=32B, Policy=LRU, Org=SetAssociative (Effective: 2way, 2 ways) | L2: Size=8192B, Block=32B, Policy=LRU, Org=SetAssociative (Effective: 4way, 4 ways)",
+  "test_name": "ConflictHeavy_L1Size_512B"
+}

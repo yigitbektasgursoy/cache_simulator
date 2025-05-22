@@ -1,102 +1,185 @@
 // cache_policy.cpp
 #include "cache_policy.hpp"
-#include <stdexcept>
+#include <set>
+#include <random>
 
 // LRU Policy Implementation
 void LRUPolicy::onAccess(uint64_t set, uint64_t way) {
-    // First access to this set
+
+    // If this is the first access to this set, create a new list
     if (lruList_.find(set) == lruList_.end()) {
         lruList_[set] = std::list<uint64_t>{way};
         lruPositions_[set][way] = lruList_[set].begin();
+        
         return;
     }
-
+    
     auto& list = lruList_[set];
     auto& positions = lruPositions_[set];
-
-    // First access to this way in the set
-    if (positions.find(way) == positions.end()) {
-        list.push_front(way);
-        positions[way] = list.begin();
-        return;
+    
+    // If this way is already in the list, remove it
+    if (positions.find(way) != positions.end()) {
+        list.erase(positions[way]);
     }
-
-    // Move the accessed way to the front of the list (most recently used)
-    list.erase(positions[way]);
+    
+    // Add the way to the front (MRU position)
     list.push_front(way);
     positions[way] = list.begin();
+
 }
 
 uint64_t LRUPolicy::getVictim(uint64_t set, uint64_t numWays) {
-    // If there are not enough entries to fill all ways, return the next empty one
-    if (lruList_.find(set) == lruList_.end() || lruList_[set].size() < numWays) {
+
+    // If this set doesn't exist yet, return way 0
+    if (lruList_.find(set) == lruList_.end()) {
+        return 0;
+    }
+    
+    auto& list = lruList_[set];
+
+    
+    // If the set isn't full yet, find an unused way
+    if (list.size() < numWays) {
         // Find the first unused way
+        std::set<uint64_t> usedWays;
+        for (uint64_t way : list) {
+            usedWays.insert(way);
+        }
+        
         for (uint64_t way = 0; way < numWays; ++way) {
-            if (lruPositions_.find(set) == lruPositions_.end() ||
-                lruPositions_[set].find(way) == lruPositions_[set].end()) {
+            if (usedWays.find(way) == usedWays.end()) {
                 return way;
             }
         }
     }
-
+    
     // Return the least recently used way (back of the list)
-    return lruList_[set].back();
+    uint64_t victim = list.back();
+    return victim;
 }
+
 
 std::unique_ptr<ReplacementPolicy> LRUPolicy::clone() const {
     return std::make_unique<LRUPolicy>(*this);
 }
 
-// Fixed FIFO Policy Implementation
+
+// Implementation of FIFOPolicy methods
 void FIFOPolicy::onAccess(uint64_t set, uint64_t way) {
-    // First access to this set
-    if (fifoQueue_.find(set) == fifoQueue_.end()) {
-        fifoQueue_[set] = std::list<uint64_t>{way};
-        return;
+
+    // Initialize counter if needed
+    if (circularCounters_.find(set) == circularCounters_.end()) {
+        circularCounters_[set] = 0;
+    }
+    
+    auto& used = usedWays_[set];
+
+    // Only track ways if we haven't seen them before
+    if (used.find(way) == used.end()) {
+        used.insert(way);
     }
 
-    auto& queue = fifoQueue_[set];
-
-    // Only add to queue on first insertion, not on every access
-    if (std::find(queue.begin(), queue.end(), way) == queue.end()) {
-        queue.push_back(way);  // FIXED: Changed from push_front to push_back
-    }
 }
 
 uint64_t FIFOPolicy::getVictim(uint64_t set, uint64_t numWays) {
-    // If there are not enough entries to fill all ways, return the next empty one
-    if (fifoQueue_.find(set) == fifoQueue_.end() || fifoQueue_[set].size() < numWays) {
-        // Find the first unused way
+
+    // Initialize counter if needed
+    if (circularCounters_.find(set) == circularCounters_.end()) {
+        circularCounters_[set] = 0;
+    }
+    
+    auto& used = usedWays_[set];
+
+    
+    // Initial filling phase - find first unused way
+    if (used.size() < numWays) {
         for (uint64_t way = 0; way < numWays; ++way) {
-            if (fifoQueue_.find(set) == fifoQueue_.end() ||
-                std::find(fifoQueue_[set].begin(), fifoQueue_[set].end(), way) == fifoQueue_[set].end()) {
+            if (used.find(way) == used.end()) {
                 return way;
             }
         }
     }
+    
+    // Get current victim from counter
+    uint64_t victim = circularCounters_[set];
+    
+    // Update counter for next time (circular)
+    circularCounters_[set] = (circularCounters_[set] + 1) % numWays;
 
-    // Return the oldest inserted way (front of the queue)
-    return fifoQueue_[set].front();  // FIXED: Changed from back() to front()
+    
+    return victim;
 }
 
 std::unique_ptr<ReplacementPolicy> FIFOPolicy::clone() const {
     return std::make_unique<FIFOPolicy>(*this);
 }
 
-// Random Policy Implementation
+
+// Updated RandomPolicy onAccess and getVictim methods
 void RandomPolicy::onAccess(uint64_t set, uint64_t way) {
-    // No state to update for random policy
-    (void)set;
-    (void)way;
+    // When a way is accessed, mark it as used
+    if (usedWays_.find(set) == usedWays_.end()) {
+        // Initialize with enough space for the ways in this set
+        usedWays_[set] = std::vector<bool>(32, false); // 32 is a safe maximum
+    }
+    
+    // Mark this way as used
+    if (way < usedWays_[set].size()) {
+        usedWays_[set][way] = true;
+    }
 }
 
 uint64_t RandomPolicy::getVictim(uint64_t set, uint64_t numWays) {
-    // Simply return a random way
-    (void)set;
+    // Create a fresh RNG for each call
+    std::random_device rd;
+    std::mt19937 rng(rd());
     std::uniform_int_distribution<uint64_t> dist(0, numWays - 1);
-    return dist(rng_);
+    
+    // If there's no record for this set yet, initialize it
+    if (usedWays_.find(set) == usedWays_.end()) {
+        usedWays_[set] = std::vector<bool>(numWays, false);
+    }
+    
+    // Ensure the vector is large enough
+    if (usedWays_[set].size() < numWays) {
+        usedWays_[set].resize(numWays, false);
+    }
+    
+    // First check if any ways are unused
+    for (uint64_t way = 0; way < numWays; ++way) {
+        if (!usedWays_[set][way]) {
+
+            // Mark it as used now
+            usedWays_[set][way] = true;
+            return way;
+        }
+    }
+    
+    // All ways are used, select a random victim
+    uint64_t victim = dist(rng);
+    return victim;
 }
 
 std::unique_ptr<ReplacementPolicy> RandomPolicy::clone() const {
     return std::make_unique<RandomPolicy>(*this);
+}
+
+
+// LRU Policy reset implementation
+void LRUPolicy::reset() {
+    // Clear LRU tracking data structures
+    lruList_.clear();
+    lruPositions_.clear();
+}
+
+void FIFOPolicy::reset() {
+    // Clear all data structures
+    circularCounters_.clear();
+    usedWays_.clear();
+}
+
+// Random Policy reset implementation
+void RandomPolicy::reset() {
+    // Clear the map tracking used ways
+    usedWays_.clear();
 }
