@@ -37,7 +37,7 @@ A comprehensive, configurable cache simulator written in C++20 for analyzing mem
 ### Build Instructions
 ```bash
 # Clone the repository
-git clone https://github.com/yigitbektasgursoy/cache_simulator.git
+git clone <repository-url>
 cd cache-simulator
 
 # Create build directory
@@ -259,6 +259,33 @@ When using the `--csv` option, the simulator generates:
 
 These CSV files can be imported into Excel, Python (pandas), R, or other analysis tools for further visualization and analysis.
 
+## Future Work
+
+Several enhancement opportunities exist for expanding the cache simulator capabilities:
+
+### 🚀 **Implementation Scalability**
+- **Streaming Trace Processing**: Implement pipe support and streaming to handle large trace files (45GB+) without requiring complete download and storage
+- **Distributed Processing**: Enable distributed simulation across multiple nodes for larger parameter spaces
+
+### 📊 **Advanced Analysis**
+- **Timing Integration**: Integrate with CACTI or similar tools for realistic SRAM delay models and AMAT analysis
+- **Power and Area Analysis**: Add power and area models for comprehensive design space exploration
+
+### 🏗️ **Architecture Extensions**
+- **Advanced Replacement Policies**: Implement pseudo-LRU, tree-based, and adaptive replacement strategies
+- **Three-Level Hierarchy**: Add L3 cache support to align with modern processor architectures
+- **Multi-core and Coherence**: Extend to multi-core configurations with coherence protocol analysis
+
+### 📈 **Benchmark and Workload Expansion**
+- **Modern Benchmarks**: Add machine learning workloads, graph algorithms, and contemporary applications
+- **Real-world Traces**: Integrate production application traces for actual deployment scenario analysis
+
+### 🔧 **Current Limitations**
+- Large trace file management (45GB+ storage requirements)
+- Two-level hierarchy limitation vs. modern 3+ level caches
+- Limited to three replacement policies (LRU, FIFO, Random)
+- Non-timing metrics focus (timing models planned for future integration)
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues for:
@@ -266,3 +293,4 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 - Additional trace formats
 - Performance optimizations
 - Documentation improvements
+- Future work implementations listed above
