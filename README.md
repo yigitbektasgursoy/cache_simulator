@@ -39,7 +39,7 @@ A comprehensive, configurable cache simulator written in C++20 for analyzing mem
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/yigitbektasgursoy/cache_simulator.git
 cd cache-simulator
 
 # Create build directory
