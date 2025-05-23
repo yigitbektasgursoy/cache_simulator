@@ -390,7 +390,3 @@ void PerformanceAnalyzer::saveResultsToCSV(const std::vector<TestResult>& result
     file.close();
     std::cout << "Results saved to " << filename << std::endl;
 }
-
-void PerformanceAnalyzer::exportForPlotting(const std::vector<TestResult>& results, const std::string& directory) const {
-    // Implementation remains the same
-}

@@ -72,9 +72,9 @@ void printMemoryStats(const MainMemory& memory) {
 void printUsage(const char* programName) {
     std::cout << "Usage: " << programName << " <config1.json> [config2.json ...] [options]" << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  --visualize    Generate visualization scripts for results" << std::endl;
     std::cout << "  --compare      Compare results across multiple configurations" << std::endl;
     std::cout << "  --verbose      Display detailed output" << std::endl;
+    std::cout << "  --csv          Save results to CSV file" << std::endl;
     std::cout << "  --help         Display this help message" << std::endl;
 }
 
@@ -86,21 +86,21 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<std::string> configFiles;
-    bool generateVisualizations = true;
     bool compareConfigs = false;
     bool verbose = false;
+    bool saveToCSV = false;
 
     // Parse arguments
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg[0] == '-') {
             // This is an option
-            if (arg == "--visualize") {
-                generateVisualizations = true;
-            } else if (arg == "--compare") {
+            if (arg == "--compare") {
                 compareConfigs = true;
             } else if (arg == "--verbose") {
                 verbose = true;
+            } else if (arg == "--csv") {
+                saveToCSV = true;
             } else if (arg == "--help") {
                 printUsage(argv[0]);
                 return 0;
@@ -151,13 +151,11 @@ int main(int argc, char* argv[]) {
         std::cout << "\nResults Comparison:" << std::endl;
         analyzer.compareResults(results);
 
-        // Save results to CSV and generate visualization if requested
-        if (generateVisualizations) {
+        // Save results to CSV if requested
+        if (saveToCSV) {
             std::string csvFile = "cache_comparison_results.csv";
             analyzer.saveResultsToCSV(results, csvFile);
-
-            std::cout << "\nGenerated visualization files:" << std::endl;
-            std::cout << "  " << csvFile << std::endl;
+            std::cout << "\nResults saved to: " << csvFile << std::endl;
         }
 
         return 0;
@@ -237,8 +235,8 @@ int main(int argc, char* argv[]) {
         printCacheStats(hierarchy);
         printMemoryStats(memory);
 
-        // Generate visualizations if requested
-        if (generateVisualizations) {
+        // Save results to CSV if requested
+        if (saveToCSV) {
             // Create a performance analyzer
             PerformanceAnalyzer analyzer;
 
@@ -265,9 +263,7 @@ int main(int argc, char* argv[]) {
             std::string csvFile = testConfig->name + "_results.csv";
             analyzer.saveResultsToCSV(results, csvFile);
 
-            std::cout << "\nGenerated visualization files:" << std::endl;
-            std::cout << "  " << csvFile << std::endl;
-
+            std::cout << "\nResults saved to: " << csvFile << std::endl;
         }
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

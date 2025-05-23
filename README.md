@@ -1,5 +1,4 @@
 # Cache Simulator
-
 A comprehensive, configurable cache simulator written in C++20 for analyzing memory hierarchy performance in computer systems.
 
 ## Features
@@ -24,19 +23,18 @@ A comprehensive, configurable cache simulator written in C++20 for analyzing mem
 
 ### Performance Analysis
 - **Comprehensive Metrics**: Hit rates, miss rates, AMAT (Average Memory Access Time)
-- **Visualization**: Automatic generation of Python plotting scripts
 - **Comparison Tools**: Multi-configuration performance comparison
-- **Export Options**: CSV data export for further analysis
+- **Export Options**: CSV data export for analysis with external tools
+- **Detailed Statistics**: Per-cache-level performance breakdown
 
 ## Building and Installation
 
 ### Prerequisites
 - C++20 compatible compiler (GCC 10+, Clang 10+, or MSVC 2019+)
-- CMake 3.16 or higher
-- nlohmann/json library
+- CMake 3.20 or higher
+- nlohmann/json library (automatically fetched during build)
 
 ### Build Instructions
-
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -52,8 +50,7 @@ make -j$(nproc)
 
 ## Usage
 
-### Basic Usage
-
+### Command Line Options
 ```bash
 # Run with a single configuration
 ./cache_simulator config.json
@@ -61,15 +58,20 @@ make -j$(nproc)
 # Compare multiple configurations
 ./cache_simulator config1.json config2.json config3.json --compare
 
-# Generate visualizations
-./cache_simulator config.json --visualize
+# Save results to CSV for external analysis
+./cache_simulator config.json --csv
 
-# Verbose output
+# Verbose output during simulation
 ./cache_simulator config.json --verbose
+
+# Compare multiple configs and save to CSV
+./cache_simulator config1.json config2.json --compare --csv
+
+# Display help
+./cache_simulator --help
 ```
 
 ### Configuration File Format
-
 The simulator uses JSON configuration files to define cache hierarchies and test parameters:
 
 ```json
@@ -117,6 +119,7 @@ The simulator uses JSON configuration files to define cache hierarchies and test
 ### Configuration Parameters
 
 #### Cache Configuration
+- `level`: Cache level (1 for L1, 2 for L2, etc.)
 - `organization`: "DirectMapped", "SetAssociative", "FullyAssociative"
 - `size`: Total cache size in bytes
 - `block_size`: Cache block size in bytes
@@ -127,53 +130,139 @@ The simulator uses JSON configuration files to define cache hierarchies and test
 - `write_allocate`: true for write-allocate, false for no-write-allocate
 - `inclusion_policy`: "Inclusive", "Exclusive", "NINE" (L2+ only)
 
+#### Memory Configuration
+- `access_latency`: Main memory access latency in cycles
+
 #### Trace Configuration
-- **File traces**: `{"type": "File", "filename": "trace.txt"}`
-- **Synthetic traces**: Pattern-based generation with configurable parameters
+- **File traces**: 
+  ```json
+  {
+    "type": "File",
+    "filename": "trace.txt"
+  }
+  ```
+- **Synthetic traces**: 
+  ```json
+  {
+    "type": "Synthetic",
+    "pattern": "Sequential|Random|Strided|Looping",
+    "start_address": 0,
+    "end_address": 1048576,
+    "num_accesses": 10000,
+    "read_ratio": 0.7
+  }
+  ```
 
 ## Architecture
 
 ### Core Components
-
 - **MemoryAddress**: Address manipulation with bit field extraction
 - **Cache**: Generic cache implementation with configurable policies
-- **CacheHierarchy**: Multi-level cache management
-- **ReplacementPolicy**: Pluggable replacement algorithms
-- **MemoryTraceSource**: Flexible trace input system
+- **CacheHierarchy**: Multi-level cache management with inclusion policy support
+- **ReplacementPolicy**: Pluggable replacement algorithms (LRU, FIFO, Random)
+- **MemoryTraceSource**: Flexible trace input system (File and Synthetic)
 - **PerformanceAnalyzer**: Metrics collection and analysis
+- **JsonConfigLoader**: Configuration file parsing and validation
 
 ### Key Features
-
-- **Modern C++20**: Uses concepts, ranges, and other modern features
+- **Modern C++20**: Uses concepts, structured bindings, and other modern features
 - **Policy-based Design**: Easily extensible replacement policies
-- **Comprehensive Testing**: Built-in performance analysis and comparison tools
-- **Visualization Ready**: Automatic generation of plotting scripts
+- **Comprehensive Analysis**: Built-in performance analysis and comparison tools
+- **Flexible Configuration**: JSON-based configuration with validation
+- **Multi-level Support**: Supports complex cache hierarchies with different inclusion policies
 
 ## Example Experiments
 
-### L1 Cache Size Analysis
+### Basic Cache Analysis
 ```bash
-# Generate configurations with varying L1 sizes
-./cache_simulator configs/01_L1_Size_Variations/*.json --compare --visualize
+# Create a simple L1 cache configuration
+./cache_simulator basic_l1_config.json --verbose
 ```
 
-### Replacement Policy Comparison
+### L1 Cache Size Comparison
+```bash
+# Compare different L1 cache sizes
+./cache_simulator l1_32k.json l1_64k.json l1_128k.json --compare --csv
+```
+
+### Replacement Policy Analysis
 ```bash
 # Compare LRU, FIFO, and Random policies
-./cache_simulator configs/04_L1_Policy_Variations/*.json --compare --visualize
+./cache_simulator lru_config.json fifo_config.json random_config.json --compare
 ```
 
 ### Multi-level Cache Analysis
 ```bash
 # Analyze L1+L2 hierarchy with different inclusion policies
-./cache_simulator configs/inclusion_policies/*.json --compare --visualize
+./cache_simulator inclusive_l2.json exclusive_l2.json nine_l2.json --compare --csv
+```
+
+### Trace Pattern Comparison
+```bash
+# Compare different access patterns
+./cache_simulator sequential_trace.json random_trace.json strided_trace.json --compare
 ```
 
 ## Performance Metrics
 
 The simulator provides comprehensive performance analysis:
 
-- **Hit Rates**: Per-level cache hit rates
-- **AMAT**: Average Memory Access Time calculation
-- **Memory Traffic**: Read/write statistics
+- **Hit Rates**: Per-level cache hit rates and miss rates
+- **AMAT**: Average Memory Access Time with per-level contributions
+- **Access Counts**: Detailed hit/miss statistics for each cache level
+- **Memory Traffic**: Main memory read/write statistics
 - **Latency Breakdown**: Contribution analysis per cache level
+- **Inclusion Policy Effects**: Analysis of different inclusion policies
+
+### Sample Output
+```
+Cache Statistics:
+--------------------------------------------------
+L1 Cache:
+  Hits:   7842
+  Misses: 2158
+  Total:  10000
+  Hit Rate: 78.42%
+  Configuration:
+    Size: 32768 bytes
+    Block Size: 64 bytes
+    Associativity: 8 ways
+    Sets: 64
+    Replacement Policy: LRU
+
+L2 Cache:
+  Hits:   1876
+  Misses: 282
+  Total:  2158
+  Hit Rate: 86.93%
+  Configuration:
+    Size: 262144 bytes
+    Block Size: 64 bytes
+    Associativity: 16 ways
+    Sets: 256
+    Replacement Policy: LRU
+    Inclusion Policy: Inclusive
+
+Memory Statistics:
+--------------------------------------------------
+  Reads:  225
+  Writes: 57
+  Total:  282
+  Latency: 100 cycles
+```
+
+## Output Files
+
+When using the `--csv` option, the simulator generates:
+- `cache_comparison_results.csv` - When comparing multiple configurations
+- `{test_name}_results.csv` - When analyzing a single configuration
+
+These CSV files can be imported into Excel, Python (pandas), R, or other analysis tools for further visualization and analysis.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit pull requests or open issues for:
+- New replacement policies
+- Additional trace formats
+- Performance optimizations
+- Documentation improvements
