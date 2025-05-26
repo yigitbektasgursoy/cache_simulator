@@ -11,8 +11,8 @@ A comprehensive, configurable cache simulator written in C++20 for analyzing mem
   - Fully associative
 - **Replacement Policies**: LRU, FIFO, Random
 - **Write Policies**: Write-back/Write-through, Write-allocate/No-write-allocate
-- **Inclusion Policies**: Inclusive, Exclusive, Non-Inclusive Non-Exclusive (NINE) (not fully implemented)
-
+- **Inclusion Policies**: Inclusive, Exclusive, Non-Inclusive Non-Exclusive (NINE)
+-  Non-Inclusive Non-Exclusive (NINE) is not fully implemented
 ### Memory Trace Sources
 - **File-based traces**: Support for custom trace file formats
 - **Synthetic traces**: Algorithmic pattern generation
