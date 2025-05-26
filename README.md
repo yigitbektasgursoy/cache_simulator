@@ -128,7 +128,7 @@ The simulator uses JSON configuration files to define cache hierarchies and test
 - `access_latency`: Access time in cycles
 - `write_back`: true for write-back, false for write-through
 - `write_allocate`: true for write-allocate, false for no-write-allocate
-- `inclusion_policy`: "Inclusive", "Exclusive", "NINE" (L2+ only)
+- `inclusion_policy`: "Inclusive", "Exclusive"
 
 #### Memory Configuration
 - `access_latency`: Main memory access latency in cycles
